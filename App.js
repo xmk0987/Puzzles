@@ -57,7 +57,6 @@ const App = () => {
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="NewPuzzle" component={NewPuzzle} />
         <Stack.Screen name="Puzzle" component={Puzzle} />
-
       </Stack.Navigator>
     </NavigationContainer>
   );

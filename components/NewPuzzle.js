@@ -49,15 +49,15 @@ const NewPuzzle = ({ navigation }) => {
   const onPress = () =>
     ActionSheetIOS.showActionSheetWithOptions(
       {
-        options: ["1000", "100", "64", "36", "25", "9", "Cancel"],
-        cancelButtonIndex: 6, // Index of the Cancel button
+        options: [ "100", "64", "36", "25", "9", "Cancel"],
+        cancelButtonIndex: 5, // Index of the Cancel button
         destructiveButtonIndex: -1, // No destructive button
         userInterfaceStyle: "dark",
       },
       (buttonIndex) => {
-        if (buttonIndex !== 6) {
+        if (buttonIndex !== 5) {
           setPieces(
-            Number(["1000", "100", "64", "36", "25", "9"][buttonIndex])
+            Number(["100", "64", "36", "25", "9"][buttonIndex])
           );
         }
       }

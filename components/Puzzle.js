@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,15 @@ import {
   Image,
   StyleSheet,
   Dimensions,
+  PanResponder,
   ImageBackground,
+  Animated,
 } from "react-native";
 import { commonStyles } from "../styles/commonStyles";
 import { puzzleStyles } from "../styles/puzzleStyles";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import { Piece } from "../classes/Piece";
+import { GridSpot } from "../classes/Spot";
 
 const Puzzle = ({ navigation, route }) => {
   const pieceAmountOptions = {
@@ -31,6 +35,43 @@ const Puzzle = ({ navigation, route }) => {
   );
   const [pieceHeight, setPieceHeight] = useState(0);
   const [pieceWidth, setPieceWidth] = useState(0);
+  const [piecePositions, setPiecePositions] = useState({});
+
+  const getPanResponder = (index) =>
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (event, gesture) => {
+        const { x0, y0, dx, dy } = gesture;
+        const { x, y } = piecePositions[index] || { x: 0, y: 0 };
+
+        setPiecePositions({
+          ...piecePositions,
+          [index]: { x: x + dx, y: y + dy },
+        });
+      },
+      onPanResponderRelease: () => {
+        // You can perform any actions you want when the user releases the piece
+      },
+    });
+
+  // Setting up the puzzle piezes and generating the puzzle grid
+  const setupPuzzle = async () => {
+    const allPieces = await getPieces();
+    const theGrid = await generatePuzzleGrid();
+    setGrid(theGrid);
+    setPieces(allPieces);
+    const initialPositions = {};
+    allPieces.forEach((piece, index) => {
+      initialPositions[index] = {
+        x: pieceWidth * piece.answer.j,
+        y: pieceHeight * piece.answer.i,
+      };
+    });
+    setPiecePositions(initialPositions);
+
+    const shuffled = shuffleArray([...allPieces]); // Create a shallow copy of pieces array before shuffling
+    setShuffledPieces(shuffled);
+  };
 
   const shuffleArray = (array) => {
     for (let i = array.length - 1; i > 0; i--) {
@@ -38,15 +79,6 @@ const Puzzle = ({ navigation, route }) => {
       [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
-  };
-
-  const setupPuzzle = async () => {
-    const allPieces = await getPieces();
-    const theGrid = await generatePuzzleGrid();
-    setGrid(theGrid);
-    setPieces(allPieces);
-    const shuffled = shuffleArray([...allPieces]); // Create a shallow copy of pieces array before shuffling
-    setShuffledPieces(shuffled);
   };
 
   const getPieces = async () => {
@@ -69,12 +101,15 @@ const Puzzle = ({ navigation, route }) => {
             ],
             { format: SaveFormat.PNG }
           );
-          const pieceWithCoordinates = {
-            ...maniResult,
-            x: j,
-            y: i,
-          };
-          allPieces.push(pieceWithCoordinates);
+
+          const newPiece = new Piece(
+            { i, j },
+            { x: pieceWidth * j, y: pieceHeight * i },
+            maniResult.uri,
+            maniResult.width,
+            maniResult.height
+          );
+          allPieces.push(newPiece);
         }
       }
       return allPieces;
@@ -86,7 +121,7 @@ const Puzzle = ({ navigation, route }) => {
   const resizeImage = async () => {
     const screenWidth = Dimensions.get("window").width;
     const screenHeight = Dimensions.get("window").height;
-    const targetWidth = Math.floor(screenWidth * 0.95); // Resize to 95% of screen width
+    const targetWidth = Math.floor(screenWidth * 0.9); // Resize to 95% of screen width
     const targetHeight = Math.floor(screenHeight * 0.4);
     try {
       const resizedImage = await manipulateAsync(
@@ -106,7 +141,8 @@ const Puzzle = ({ navigation, route }) => {
     const grid = [];
     for (let i = 0; i < numCols; i++) {
       for (let j = 0; j < numCols; j++) {
-        grid.push({ x: j, y: i, piece: null });
+        const gridSpot = new GridSpot({ j, i }, null);
+        grid.push(gridSpot);
       }
     }
     return grid;
@@ -122,11 +158,36 @@ const Puzzle = ({ navigation, route }) => {
     }
   }, [image, pieceWidth, pieceHeight]);
 
+  const renderPiece = (piece, index, getPanResponder) => {
+    return (
+      <Image
+        key={index}
+        source={{ uri: piece.getImageUri() }}
+        style={[
+          {
+            width: piece.getHeight(),
+            height: piece.getWidth(),
+            borderWidth: 1,
+            borderColor: "black",
+          },
+          piecePositions[index] && {
+            position: "absolute",
+            left: piecePositions[index].x,
+            top: piecePositions[index].y,
+          },
+        ]}
+        {...getPanResponder(index).panHandlers}
+      />
+    );
+  };
+
   return (
     <View style={commonStyles.container}>
       <View style={puzzleStyles.header}></View>
       <View style={puzzleStyles.puzzleContainer}>
         {grid &&
+          pieces &&
+          pieces.length > 0 &&
           grid.map((spot, index) => (
             <View
               key={index}
@@ -139,42 +200,15 @@ const Puzzle = ({ navigation, route }) => {
                 },
               ]}
             >
-              <Text>
-                {spot.x} {spot.y}
-              </Text>
+              <Image style={commonStyles.flex1}></Image>
             </View>
           ))}
       </View>
       <View style={puzzleStyles.piecesContainer}>
         {pieces &&
-          shuffledPieces.map((piece, index) => (
-            <ImageBackground
-              key={index}
-              source={{ uri: piece.uri }}
-              style={[
-                {
-                  width: pieceWidth,
-                  height: pieceHeight,
-                },
-              ]}
-            >
-              <Text>
-                {piece.x} {piece.y}
-              </Text>
-            </ImageBackground>
-          ))}
-      </View>
-      <View style={puzzleStyles.footer}>
-        <TouchableOpacity
-          style={[
-            commonStyles.buttonContainer,
-            commonStyles.mgBot,
-            commonStyles.blackBorder,
-          ]}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={[commonStyles.text, commonStyles.buttonText]}>Save</Text>
-        </TouchableOpacity>
+          shuffledPieces.map((piece, index) =>
+            renderPiece(piece, index, getPanResponder)
+          )}
       </View>
     </View>
   );

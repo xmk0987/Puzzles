@@ -9,6 +9,7 @@ export const puzzleStyles = StyleSheet.create({
     flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "center",
+    gap: 2,
   },
   puzzle: {
     flexDirection: "row",
@@ -16,11 +17,12 @@ export const puzzleStyles = StyleSheet.create({
   },
   piecesContainer: {
     marginTop: 2,
+    gap: 2,
     flexDirection: "row",
     flexWrap: "wrap",
-    alignItems: "center",
+    width: "90%",
     justifyContent: "center",
-    gap: 0.5,
+    alignItems: "center",
   },
   footer: {
     marginTop: 100, // Adjust spacing between piecesContainer and footer
