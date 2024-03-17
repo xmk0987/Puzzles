@@ -1,7 +1,6 @@
 import React from "react";
 
 import { View, Text, TouchableOpacity } from "react-native";
-
 import { commonStyles } from "../styles/commonStyles";
 import { homeStyles } from "../styles/homeStyles";
 
@@ -20,8 +19,7 @@ const Home = ({ navigation }) => {
             commonStyles.buttonContainer,
             commonStyles.mgBot,
             commonStyles.blackBorder,
-            commonStyles.bgYellow
-
+            commonStyles.bgYellow,
           ]}
           onPress={() => navigation.navigate("NewPuzzle")}
         >
@@ -34,8 +32,7 @@ const Home = ({ navigation }) => {
             commonStyles.buttonContainer,
             commonStyles.mgBot,
             commonStyles.blackBorder,
-            commonStyles.bgYellow
-
+            commonStyles.bgYellow,
           ]}
           onPress={() => navigation.navigate("Puzzles")}
         >

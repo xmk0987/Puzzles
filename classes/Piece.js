@@ -1,8 +1,9 @@
 export class Piece {
-  constructor(answer, coords, uri, width, height) {
+  constructor(answer, coords, uri, width, height, pieceId) {
     this.answer = { i: answer.i, j: answer.j };
     this.currentPos = { x: coords.x, y: coords.y };
     (this.imageUri = uri), (this.height = height), (this.width = width);
+    this.id = pieceId;
   }
 
   movePiece(newX, newY) {
@@ -37,5 +38,4 @@ export class Piece {
     }
     return false;
   }
-
 }

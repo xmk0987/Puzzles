@@ -4,27 +4,30 @@ import {
   Text,
   TouchableOpacity,
   ActionSheetIOS,
-  Button,
-  Image,
   ImageBackground,
 } from "react-native";
 import { newStyles } from "../styles/newPuzzleStyles";
 import { commonStyles } from "../styles/commonStyles";
 import * as ImagePicker from "expo-image-picker";
 
+/**
+ * NewPuzzle component for creating a new puzzle.
+ * @param {object} navigation - Navigation prop for navigating between screens.
+ * @returns {JSX.Element} - JSX element representing the NewPuzzle component.
+ */
 const NewPuzzle = ({ navigation }) => {
+  // State variables for the number of pieces and selected image
   const [pieces, setPieces] = useState(36);
   const [image, setImage] = useState(null);
 
+  // Function to pick an image from the device's media library
   const pickImage = async () => {
-    // Check if permission has been granted
-    const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
+    const { status } = await ImagePicker.getMediaLibraryPermissionsAsync(); // Check media library permissions
     if (status !== "granted") {
-      // If not granted, request permission
       const { status: newStatus } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+        await ImagePicker.requestMediaLibraryPermissionsAsync(); // Request permission if not granted
       if (newStatus !== "granted") {
-        // If permission not granted, display an alert and return
+        // Display alert if permission not granted
         Alert.alert(
           "Permission required",
           "Please allow access to your media library to pick an image."
@@ -32,33 +35,33 @@ const NewPuzzle = ({ navigation }) => {
         return;
       }
     }
-    // No permissions request is necessary for launching the image library
+    // Launch image library to pick an image
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
-    console.log(result);
 
+    // Set the picked image if not canceled
     if (!result.canceled) {
       setImage(result.assets[0].uri);
     }
   };
 
+  // Function to handle button press for selecting the number of pieces
   const onPress = () =>
     ActionSheetIOS.showActionSheetWithOptions(
       {
-        options: [ "100", "64", "36", "25", "9", "Cancel"],
+        options: ["100", "64", "36", "25", "9", "Cancel"], // Options for the action sheet
         cancelButtonIndex: 5, // Index of the Cancel button
         destructiveButtonIndex: -1, // No destructive button
-        userInterfaceStyle: "dark",
+        userInterfaceStyle: "dark", // Dark mode for action sheet
       },
       (buttonIndex) => {
         if (buttonIndex !== 5) {
-          setPieces(
-            Number(["100", "64", "36", "25", "9"][buttonIndex])
-          );
+          // Set the number of pieces based on the selected index
+          setPieces(Number(["100", "64", "36", "25", "9"][buttonIndex]));
         }
       }
     );
