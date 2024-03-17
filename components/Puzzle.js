@@ -5,7 +5,7 @@ import {
   ImageBackground,
   Dimensions,
   PanResponder,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
 
 import { commonStyles } from "../styles/commonStyles";
@@ -62,19 +62,35 @@ const Puzzle = ({ navigation, route }) => {
   const [pieceWidth, setPieceWidth] = useState(0);
   const [piecesContainerPos, setPiecesContainerPos] = useState(null);
   const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Function to create PanResponder for dragging puzzle pieces
   const getPanResponder = (piece) =>
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderMove: (event, gesture) => {
+        const screenWidth = Dimensions.get("window").width;
         const { dx, dy } = gesture;
         const newX = piece.currentPos.x + dx;
         const newY = piece.currentPos.y + dy;
-        dispatchPieces({
-          type: "MOVE_PIECE",
-          payload: { id: piece.id, newPos: { x: newX, y: newY } },
-        });
+
+        const isOutOfBounds =
+          newX < 0 - pieceWidth ||
+          newY < 0 - grid.getHeight() - pieceHeight ||
+          newX > screenWidth - pieceWidth ||
+          newY > grid.getHeight() - pieceHeight / 2;
+
+        if (isOutOfBounds) {
+          dispatchPieces({
+            type: "MOVE_PIECE",
+            payload: { id: piece.id, newPos: piece.currentPos },
+          });
+        } else {
+          dispatchPieces({
+            type: "MOVE_PIECE",
+            payload: { id: piece.id, newPos: { x: newX, y: newY } },
+          });
+        }
       },
       onPanResponderRelease: () => {
         if (grid.checkPiecePosition(piece)) {
@@ -86,6 +102,7 @@ const Puzzle = ({ navigation, route }) => {
           if (pieces.length === 1) {
             setDone(true);
           }
+        } else {
         }
       },
     });
@@ -97,6 +114,7 @@ const Puzzle = ({ navigation, route }) => {
     await theGrid.generateGrid();
     setGrid(theGrid);
     dispatchPieces({ type: "SET_PIECES", payload: allPieces });
+    setLoading(false);
   };
 
   // Function to generate puzzle pieces from the image
@@ -106,7 +124,7 @@ const Puzzle = ({ navigation, route }) => {
       for (let i = 0; i < numCols; i++) {
         for (let j = 0; j < numCols; j++) {
           const maniResult = await manipulateAsync(
-            imageUri,
+            image.uri,
             [
               {
                 crop: {
@@ -165,10 +183,10 @@ const Puzzle = ({ navigation, route }) => {
   }, []);
 
   useEffect(() => {
-    if (pieceWidth !== 0 && pieceHeight !== 0 && image && piecesContainerPos) {
+    if (pieceWidth !== 0 && pieceHeight !== 0 && image) {
       setupPuzzle();
     }
-  }, [image, pieceWidth, pieceHeight]);
+  }, [image, pieceWidth, pieceHeight, loading]);
 
   // Function to render each puzzle piece
   const renderPiece = (piece) => {
@@ -199,72 +217,72 @@ const Puzzle = ({ navigation, route }) => {
 
   return (
     <View style={commonStyles.container}>
-      <View style={puzzleStyles.header}></View>
-      <View
-        style={puzzleStyles.puzzleContainer}
-        onLayout={(event) => {
-          const layout = event.nativeEvent.layout;
-          if (layout) {
-            const { x, y } = layout;
-          }
-        }}
-      >
-        {grid &&
-          grid.spots &&
-          grid.spots.map((spot, index) => (
-            <View
-              key={index}
+      {loading ? (
+        <View style={commonStyles.loading}>
+          <Text>Loading ...</Text>
+        </View>
+      ) : (
+        <>
+          <View style={puzzleStyles.header}></View>
+          <View style={puzzleStyles.puzzleContainer}>
+            {grid &&
+              grid.spots &&
+              grid.spots.map((spot, index) => (
+                <View
+                  key={index}
+                  style={[
+                    {
+                      width: pieceWidth,
+                      height: pieceHeight,
+                      borderWidth: spot.piece ? 0 : 1,
+                      borderColor: "black",
+                      margin: spot.piece ? 0 : 1,
+                    },
+                  ]}
+                >
+                  {spot.piece ? (
+                    <ImageBackground
+                      source={{ uri: spot.piece.imageUri }}
+                      style={commonStyles.flex1}
+                    ></ImageBackground>
+                  ) : null}
+                </View>
+              ))}
+          </View>
+          <View
+            style={puzzleStyles.piecesContainer}
+            onLayout={(event) => {
+              const layout = event.nativeEvent.layout;
+              if (layout) {
+                const { x, y } = layout;
+                setPiecesContainerPos({ x, y });
+              }
+            }}
+          >
+            {!done ? (
+              pieces &&
+              pieces.length !== 0 &&
+              pieces.map((piece) => renderPiece(piece))
+            ) : (
+              <Text style={commonStyles.header}>Done</Text>
+            )}
+          </View>
+          <View>
+            <TouchableOpacity
               style={[
-                {
-                  width: pieceWidth,
-                  height: pieceHeight,
-                  borderWidth: spot.piece ? 0 : 1,
-                  borderColor: "black",
-                  margin: spot.piece ? 0 : 1,
-                },
+                commonStyles.buttonContainer,
+                commonStyles.mgBot,
+                commonStyles.blackBorder,
               ]}
+              onPress={() => navigation.goBack()}
             >
-              {spot.piece ? (
-                <ImageBackground
-                  source={{ uri: spot.piece.imageUri }}
-                  style={commonStyles.flex1}
-                ></ImageBackground>
-              ) : null}
-            </View>
-          ))}
-      </View>
-      <View
-        style={puzzleStyles.piecesContainer}
-        onLayout={(event) => {
-          const layout = event.nativeEvent.layout;
-          if (layout) {
-            const { x, y } = layout;
-            setPiecesContainerPos({ x, y });
-          }
-        }}
-      >
-        {!done ? (
-          pieces &&
-          pieces.length !== 0 &&
-          pieces.map((piece) => renderPiece(piece))
-        ) : (
-          <Text style={commonStyles.header}>Done</Text>
-        )}
-      </View>
-      <View>
-        <TouchableOpacity
-          style={[
-            commonStyles.buttonContainer,
-            commonStyles.mgBot,
-            commonStyles.blackBorder,
-          ]}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={[commonStyles.text, commonStyles.buttonText]}>
-            Go back
-          </Text>
-        </TouchableOpacity>
-      </View>
+              <Text style={[commonStyles.text, commonStyles.buttonText]}>
+                Go back
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </View>
   );
 };

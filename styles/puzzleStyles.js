@@ -16,7 +16,7 @@ export const puzzleStyles = StyleSheet.create({
     flexWrap: "wrap",
   },
   piecesContainer: {
-    width: "90%",
+    width: "92%",
     height: "42%"
   },
   footer: {

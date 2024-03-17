@@ -4,7 +4,7 @@ export const commonStyles = StyleSheet.create({
   container: {
     backgroundColor: "#F6F6F6",
     alignItems: "center",
-    height: "100%"
+    height: "100%",
   },
   header: {
     fontSize: 45,
@@ -50,5 +50,11 @@ export const commonStyles = StyleSheet.create({
   },
   flex1: {
     flex: 1,
+  },
+  loading: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+    height: "100%",
   },
 });
