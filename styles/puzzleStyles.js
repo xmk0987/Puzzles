@@ -17,7 +17,9 @@ export const puzzleStyles = StyleSheet.create({
   },
   piecesContainer: {
     width: "92%",
-    height: "42%"
+    height: "42%",
+    alignItems: "center",
+    justifyContent: "center"
   },
   footer: {
     marginTop: 100, // Adjust spacing between piecesContainer and footer
@@ -28,4 +30,9 @@ export const puzzleStyles = StyleSheet.create({
     width: undefined, // Allow width to be automatically determined by flex
     height: undefined, // Allow height to be automatically determined by flex
   },
+  doneText: {
+    textAlign: "center",
+
+    
+  }
 });

@@ -60,7 +60,6 @@ const Puzzle = ({ navigation, route }) => {
   );
   const [pieceHeight, setPieceHeight] = useState(0);
   const [pieceWidth, setPieceWidth] = useState(0);
-  const [piecesContainerPos, setPiecesContainerPos] = useState(null);
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -113,10 +112,21 @@ const Puzzle = ({ navigation, route }) => {
     const theGrid = new Grid(numCols, pieceWidth, pieceHeight);
     await theGrid.generateGrid();
     setGrid(theGrid);
-    dispatchPieces({ type: "SET_PIECES", payload: allPieces });
+    const shuffled = shuffleArray(allPieces);
+    dispatchPieces({ type: "SET_PIECES", payload: shuffled });
     setLoading(false);
   };
 
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i].currentPos, array[j].currentPos] = [
+        array[j].currentPos,
+        array[i].currentPos,
+      ]; // Swap elements
+    }
+    return array;
+  }
   // Function to generate puzzle pieces from the image
   const getPieces = async () => {
     const allPieces = [];
@@ -189,9 +199,10 @@ const Puzzle = ({ navigation, route }) => {
   }, [image, pieceWidth, pieceHeight, loading]);
 
   // Function to render each puzzle piece
-  const renderPiece = (piece) => {
+  const renderPiece = (piece, index) => {
     return (
       <View
+        key={`piece-${index}`}
         style={{
           width: piece.width,
           height: piece.height,
@@ -205,12 +216,7 @@ const Puzzle = ({ navigation, route }) => {
           source={{ uri: piece.imageUri }}
           style={{ flex: 1 }}
           {...getPanResponder(piece).panHandlers}
-        >
-          <Text>
-            {piece.answer.j}
-            {piece.answer.i}
-          </Text>
-        </ImageBackground>
+        ></ImageBackground>
       </View>
     );
   };
@@ -249,22 +255,15 @@ const Puzzle = ({ navigation, route }) => {
                 </View>
               ))}
           </View>
-          <View
-            style={puzzleStyles.piecesContainer}
-            onLayout={(event) => {
-              const layout = event.nativeEvent.layout;
-              if (layout) {
-                const { x, y } = layout;
-                setPiecesContainerPos({ x, y });
-              }
-            }}
-          >
+          <View style={puzzleStyles.piecesContainer}>
             {!done ? (
               pieces &&
               pieces.length !== 0 &&
-              pieces.map((piece) => renderPiece(piece))
+              pieces.map((piece, index) => renderPiece(piece, index))
             ) : (
-              <Text style={commonStyles.header}>Done</Text>
+              <Text style={[commonStyles.header, commonStyles.medium]}>
+                Done
+              </Text>
             )}
           </View>
           <View>
