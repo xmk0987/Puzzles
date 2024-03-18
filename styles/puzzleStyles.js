@@ -9,7 +9,7 @@ export const puzzleStyles = StyleSheet.create({
     flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 2
+    marginBottom: 2,
   },
   puzzle: {
     flexDirection: "row",
@@ -19,7 +19,7 @@ export const puzzleStyles = StyleSheet.create({
     width: "92%",
     height: "42%",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   footer: {
     marginTop: 100, // Adjust spacing between piecesContainer and footer
@@ -32,7 +32,5 @@ export const puzzleStyles = StyleSheet.create({
   },
   doneText: {
     textAlign: "center",
-
-    
-  }
+  },
 });

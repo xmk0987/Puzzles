@@ -1,8 +1,8 @@
 import { GridSpot } from "./Spot";
 
 export class Grid {
-  constructor(rowCols, pieceWidth, pieceHeight) {
-    this.spots = [];
+  constructor(rowCols, pieceWidth, pieceHeight, spots) {
+    this.spots = spots || [];
     this.rowCols = rowCols;
     this.pieceWidth = pieceWidth;
     this.pieceHeight = pieceHeight;

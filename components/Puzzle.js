@@ -7,6 +7,7 @@ import {
   PanResponder,
   TouchableOpacity,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { commonStyles } from "../styles/commonStyles";
 import { puzzleStyles } from "../styles/puzzleStyles";
@@ -14,6 +15,7 @@ import { puzzleStyles } from "../styles/puzzleStyles";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { Piece } from "../classes/Piece";
 import { Grid } from "../classes/Grid";
+import { GridSpot } from "../classes/Spot";
 
 /**
  * Puzzle Component
@@ -91,7 +93,7 @@ const Puzzle = ({ navigation, route }) => {
           });
         }
       },
-      onPanResponderRelease: () => {
+      onPanResponderRelease: async () => {
         if (grid.checkPiecePosition(piece)) {
           dispatchPieces({
             type: "REMOVE_PIECE",
@@ -101,6 +103,43 @@ const Puzzle = ({ navigation, route }) => {
           if (pieces.length === 1) {
             setDone(true);
           }
+
+          console.log("saving grid");
+          try {
+            // Construct puzzle object
+            const puzzleData = {
+              imageUri: imageUri,
+              pieceAmount: pieceAmount,
+              grid: grid,
+              spots: grid.spots,
+              pieces: pieces,
+              // Add other puzzle data as needed
+            };
+
+            // Fetch existing puzzles from AsyncStorage
+            const existingPuzzles = await AsyncStorage.getItem("puzzles");
+            const puzzles = existingPuzzles ? JSON.parse(existingPuzzles) : [];
+            // Check if puzzle already exists based on parameters
+            const existingPuzzleIndex = puzzles.findIndex(
+              (puzzle) =>
+                puzzle.imageUri === imageUri &&
+                puzzle.pieceAmount === pieceAmount
+            );
+            if (existingPuzzleIndex !== -1) {
+              // If puzzle exists, update it
+              puzzles[existingPuzzleIndex] = puzzleData;
+            } else {
+              // If puzzle doesn't exist, add it to the list
+              puzzles.push(puzzleData);
+            }
+
+            // Save updated puzzles list to AsyncStorage
+            await AsyncStorage.setItem("puzzles", JSON.stringify(puzzles));
+            console.log("Puzzle data saved successfully.");
+            console.log("Puzzle data saved successfully.");
+          } catch (error) {
+            console.error("Error saving puzzle data:", error);
+          }
         } else {
         }
       },
@@ -108,13 +147,52 @@ const Puzzle = ({ navigation, route }) => {
 
   // Function to set up the puzzle
   const setupPuzzle = async () => {
-    const allPieces = await getPieces();
-    const theGrid = new Grid(numCols, pieceWidth, pieceHeight);
-    await theGrid.generateGrid();
-    setGrid(theGrid);
-    const shuffled = shuffleArray(allPieces);
-    dispatchPieces({ type: "SET_PIECES", payload: shuffled });
-    setLoading(false);
+    try {
+      const existingPuzzles = await AsyncStorage.getItem("puzzles");
+      const puzzles = existingPuzzles ? JSON.parse(existingPuzzles) : [];
+      // Check if puzzle already exists based on parameters
+      const existingPuzzleIndex = puzzles.findIndex(
+        (puzzle) =>
+          puzzle.imageUri === imageUri && puzzle.pieceAmount === pieceAmount
+      );
+
+      if (existingPuzzleIndex !== -1) {
+        const gridData = puzzles[existingPuzzleIndex].grid;
+        const spotData = puzzles[existingPuzzleIndex].spots;
+        const pieces = puzzles[existingPuzzleIndex].pieces;
+
+        const newGrid = new Grid(
+          gridData.rowCols,
+          gridData.pieceWidth,
+          gridData.pieceHeight,
+          spotData.map(
+            (spot) =>
+              new GridSpot(
+                spot.answer,
+                spot.piece,
+                gridData.pieceWidth,
+                gridData.pieceHeight
+              )
+          )
+        );
+        setGrid(newGrid);
+        dispatchPieces({
+          type: "SET_PIECES",
+          payload: pieces,
+        });
+      } else {
+        console.log("Setting up puzzle from scratch...");
+        const allPieces = await getPieces();
+        const theGrid = new Grid(numCols, pieceWidth, pieceHeight, []);
+        await theGrid.generateGrid();
+        setGrid(theGrid);
+        const shuffled = shuffleArray(allPieces);
+        dispatchPieces({ type: "SET_PIECES", payload: shuffled });
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Error setting up puzzle:", error);
+    }
   };
 
   function shuffleArray(array) {
