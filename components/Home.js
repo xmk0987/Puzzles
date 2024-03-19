@@ -34,7 +34,7 @@ const Home = ({ navigation }) => {
             commonStyles.blackBorder,
             commonStyles.bgYellow,
           ]}
-          onPress={() => navigation.navigate("Puzzles")}
+          onPress={() => navigation.navigate("OldPuzzles")}
         >
           <Text style={[commonStyles.text, commonStyles.buttonText]}>
             Puzzles

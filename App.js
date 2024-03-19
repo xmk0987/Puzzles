@@ -15,6 +15,7 @@ import {
 import Home from "./components/Home";
 import NewPuzzle from "./components/NewPuzzle";
 import Puzzle from "./components/Puzzle";
+import OldPuzzles from "./components/OldPuzzles";
 
 const Stack = createStackNavigator();
 
@@ -57,6 +58,7 @@ const App = () => {
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="NewPuzzle" component={NewPuzzle} />
         <Stack.Screen name="Puzzle" component={Puzzle} />
+        <Stack.Screen name="OldPuzzles" component={OldPuzzles} />
       </Stack.Navigator>
     </NavigationContainer>
   );
